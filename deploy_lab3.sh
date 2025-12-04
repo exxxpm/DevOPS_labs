@@ -19,8 +19,14 @@ git reset --hard "origin/$BRANCH"
 # собрать образ локально
 docker build -t devops-lab3:"$BRANCH" .
 
-# снести любые старые контейнеры, которые могут держать порт 8181
-docker rm -f devops-lab3 devops-app 2>/dev/null || true
+# убить контейнер devops-lab3 если есть
+docker rm -f devops-lab3 2>/dev/null || true
+
+# убить любой контейнер, занимающий порт 8181
+EXISTING=$(docker ps -q --filter "publish=8181")
+if [ -n "$EXISTING" ]; then
+  docker rm -f $EXISTING || true
+fi
 
 # запустить новый контейнер
 docker run -d --name devops-lab3 \
