@@ -2,14 +2,11 @@ name: Lab 3 CD
 
 on:
   push:
-    branches: [ "lab_3" ]
+    branches: [ lab_3 ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: read
 
     steps:
       - name: Add SSH key
@@ -17,29 +14,15 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Known hosts
+      - name: Add known hosts
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -p 2426 course.prafdin.ru >> ~/.ssh/known_hosts
 
-      - name: Deploy container to devops VM
-        env:
-          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+      - name: Deploy container to VM
         run: |
-          ssh -p 2426 deploy@course.prafdin.ru <<'EOF'
-          set -e
-
-          IMAGE="ghcr.io/exxxpm/devops_labs:lab_3"
-
-          echo "${GHCR_TOKEN}" | docker login ghcr.io -u exxxpm --password-stdin
-
-          docker pull "$IMAGE"
-
-          # Остановить старый контейнер, если есть
-          docker stop devops-app || true
-          docker rm devops-app || true
-
-          # Запустить новый
-          docker run -d --name devops-app --restart=always \
-            -p 8181:8181 "$IMAGE"
-          EOF
+          ssh -p 2426 deploy@course.prafdin.ru \
+            "docker pull exxxpm/devops-lab3:latest && \
+             docker stop lab3 || true && \
+             docker rm lab3 || true && \
+             docker run -d --name lab3 -p 8181:8181 exxxpm/devops-lab3:latest"
