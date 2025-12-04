@@ -48,7 +48,7 @@ def index():
       </head>
       <body class="d-flex align-items-center justify-content-center vh-100">
         <div class="card p-4" style="width: 650px;">
-          <h3 class="text-center mb-3">🚀 DevOPS Labki</h3>
+          <h3 class="text-center mb-3">🚀 DevOPS</h3>
           <div class="text-center mb-4">
             <span class="badge status-badge">✅ DEPLOYED SUCCESSFULLY</span>
           </div>
