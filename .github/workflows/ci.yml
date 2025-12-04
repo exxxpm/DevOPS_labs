@@ -1,14 +1,15 @@
-name: CI + Docker build (lab_3)
+name: CI (lab_4)
 
 on:
   push:
-    branches: [ "lab_3" ]
+    branches: [ "lab_4" ]
   pull_request:
-    branches: [ "lab_3" ]
+    branches: [ "lab_4" ]
 
 jobs:
   tests:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -24,38 +25,5 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Run simple tests
-        run: python -m py_compile app.py
-
-  docker-build:
-    needs: tests
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository_owner }}/devops_labs
-          tags: |
-            type=raw,value=lab_3
-            type=sha
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
+        run: |
+          python -m py_compile app.py

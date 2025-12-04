@@ -1,0 +1,29 @@
+version: "3.9"
+
+name: devops-lab4
+
+services:
+  web:
+    build: .
+    container_name: lab4-web
+    depends_on:
+      - db
+    ports:
+      - "8181:8181"
+    environment:
+      - DATABASE_URL=postgresql://lab4:lab4@db:5432/lab4
+    restart: unless-stopped
+
+  db:
+    image: postgres:16
+    container_name: lab4-db
+    environment:
+      - POSTGRES_USER=lab4
+      - POSTGRES_PASSWORD=lab4
+      - POSTGRES_DB=lab4
+    volumes:
+      - lab4_db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  lab4_db_data:

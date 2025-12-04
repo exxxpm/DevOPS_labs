@@ -1,11 +1,33 @@
-name: Lab 3 CD
+name: Lab 4 CI/CD
 
 on:
   push:
-    branches: [ "lab_3" ]
+    branches: [ "lab_4" ]
 
 jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run simple tests
+        run: |
+          python -m py_compile app.py
+
   deploy:
+    needs: tests
     runs-on: ubuntu-latest
 
     steps:
@@ -14,13 +36,27 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Add known hosts
+      - name: Add known host
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -p 2426 course.prafdin.ru >> ~/.ssh/known_hosts
 
-      - name: Deploy container on devops VM (lab_3)
+      - name: Deploy stack via docker compose (lab_4)
         run: |
-          ssh -p 2426 deploy@course.prafdin.ru \
-            'BRANCH=lab_3 REPO_URL=https://github.com/exxxpm/DevOPS_labs.git /opt/app/deploy_lab3.sh'
+          ssh -p 2426 deploy@course.prafdin.ru << 'EOF'
+          set -e
 
+          cd /opt/app
+
+          # Обновляем ветку lab_4
+          git fetch origin lab_4
+          git checkout lab_4
+          git reset --hard origin/lab_4
+
+          # Останавливаем предыдущий стек (если был)
+          docker compose down || true
+
+          # Собираем образы и поднимаем контейнеры
+          docker compose up -d --build
+
+          EOF
