@@ -2,23 +2,32 @@
 set -euo pipefail
 
 APP_DIR=/opt/app
-BRANCH=${BRANCH:-lab_4}
-REPO_URL=${REPO_URL:-https://github.com/exxxpm/DevOPS_labs.git}
 
 cd "$APP_DIR"
 
-# Обновляем код
-if [ ! -d .git ]; then
-  git init
-  git remote add origin "$REPO_URL" || git remote set-url origin "$REPO_URL"
-fi
+export DOCKER_CLIENT_TIMEOUT=300
+export COMPOSE_HTTP_TIMEOUT=300
 
-git fetch origin "$BRANCH"
-git checkout -B "$BRANCH" "origin/$BRANCH"
-git reset --hard "origin/$BRANCH"
+echo "==== [lab4] docker compose pull (with retries) ===="
+for i in 1 2 3; do
+    if docker compose pull; then
+        echo "Pull succeeded on attempt $i"
+        break
+    fi
+    echo "Pull failed on attempt $i, retrying in 20s..."
+    sleep 20
+    if [ "$i" -eq 3 ]; then
+        echo "Pull failed after 3 attempts, aborting"
+        exit 1
+    fi
+done
 
-# Обновляем контейнеры из registry (без локального build)
-docker compose pull
-docker compose up -d
+echo "==== [lab4] restarting stack ===="
+# убираем всё старое по именам, на случай «висячих» контейнеров
+docker rm -f lab4-web lab4-db 2>/dev/null || true
 
-echo "$(date -Is) lab4 deployed from branch=$BRANCH" >> /var/log/deploy/lab4-deploy.log
+# а затем стандартный down/up для текущего compose-проекта
+docker compose down || true
+docker compose up -d --remove-orphans
+
+echo "$(date -Is) lab4 deployed via compose" >> /var/log/deploy/lab4-deploy.log
