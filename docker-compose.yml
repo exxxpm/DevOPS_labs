@@ -1,29 +1,26 @@
-version: "3.9"
-
-name: devops-lab4
-
 services:
   web:
-    build: .
+    image: ghcr.io/exxxpm/devops-lab4-web:lab_4
     container_name: lab4-web
-    depends_on:
-      - db
     ports:
       - "8181:8181"
+    depends_on:
+      - db
     environment:
-      - DATABASE_URL=postgresql://lab4:lab4@db:5432/lab4
-    restart: unless-stopped
+      DATABASE_HOST: lab4-db
+      DATABASE_NAME: lab4
+      DATABASE_USER: lab4
+      DATABASE_PASSWORD: lab4
 
   db:
-    image: postgres:16
+    image: postgres:15
     container_name: lab4-db
     environment:
-      - POSTGRES_USER=lab4
-      - POSTGRES_PASSWORD=lab4
-      - POSTGRES_DB=lab4
+      POSTGRES_DB: lab4
+      POSTGRES_USER: lab4
+      POSTGRES_PASSWORD: lab4
     volumes:
-      - lab4_db_data:/var/lib/postgresql/data
-    restart: unless-stopped
+      - lab4_data:/var/lib/postgresql/data
 
 volumes:
-  lab4_db_data:
+  lab4_data:
